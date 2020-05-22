@@ -2,11 +2,21 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
 const Usuario = require('../models/usuario');
+const aut = require('../middlewares/autenticacion');
 
 const app = express();
 
 
-app.get('/usuario', function(req, res) {
+app.get('/usuario', aut.verificaToken, (req, res) => {
+
+
+    return res.json({
+        usuario: req.usuario,
+        nombre: req.usuario.nombre,
+        email: req.usuario.email
+    });
+
+
 
     let condicion = { estado: true };
 
@@ -44,7 +54,7 @@ app.get('/usuario', function(req, res) {
 
 
 
-app.post('/usuario', function(req, res) {
+app.post('/usuario', [aut.verificaToken, aut.verificaAdminRole], function(req, res) {
 
     let body = req.body;
 
@@ -74,10 +84,9 @@ app.post('/usuario', function(req, res) {
 
     });
 
-
 });
 
-app.put('/usuario/:id', function(req, res) {
+app.put('/usuario/:id', [aut.verificaToken, aut.verificaAdminRole], function(req, res) {
     let id = req.params.id;
     let body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']);
 
@@ -90,7 +99,6 @@ app.put('/usuario/:id', function(req, res) {
             });
         };
 
-
         res.json({
             ok: true,
             usuario: usuarioDB
@@ -102,7 +110,7 @@ app.put('/usuario/:id', function(req, res) {
 
 
 
-app.delete('/usuario/:id', function(req, res) {
+app.delete('/usuario/:id', [aut.verificaToken, aut.verificaAdminRole], function(req, res) {
 
     let id = req.params.id;
     let cambiaEstado = { estado: false };
@@ -134,33 +142,6 @@ app.delete('/usuario/:id', function(req, res) {
 
     });
 
-    /*
-        Usuario.findByIdAndRemove(id, (err, usuarioDel) => {
-            if (err) {
-                return res.status(400).json({
-                    ok: false,
-                    err: err
-                });
-            };
-
-            if (usuarioDel === null) {
-                return res.status(400).json({
-                    ok: false,
-                    err: {
-                        message: 'Usuario no encontrado'
-                    }
-                });
-
-            };
-
-            res.json({
-                ok: true,
-                usuario: usuarioDel
-            });
-
-        });
-
-    */
 
 });
 
